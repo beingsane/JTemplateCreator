@@ -85,7 +85,7 @@ class JTemplateCreator
         $php_content [] = '$doc->addScriptVersion($this->baseurl . \'/templates/\' . $this->template . \'/js/template.js\');';
         $php_content [] = '// Add Stylesheets';
         $php_content [] = '$doc->addStyleSheetVersion($this->baseurl . \'/templates/\' . $this->template . \'/css/template.css\');';
-        $php_content [] = '';
+        $php_content [] = '$logo = $sitename; ';
         $php_content [] = 'if ($this->params->get(\'logoFile\'))';
         $php_content [] = '{
     $logo = \'<img src="\' . JUri::root() . $this->params->get(\'logoFile\') . \'" alt="\' . $sitename . \'" />\';
@@ -321,8 +321,8 @@ class JTemplateCreator
         $xml_content [] = '<filename>component.php</filename>';
         $xml_content [] = '<filename>error.php</filename>';
         $xml_content [] = '<filename>offline.php</filename>';
-        $xml_content [] = '<filename>favicon.ico</filename>';
-        $xml_content [] = '<filename>index.php</filename>';
+       // $xml_content [] = '<filename>favicon.ico</filename>';
+        //$xml_content [] = '<filename>index.php</filename>';
         $xml_content [] = '<filename>templateDetails.xml</filename>';
         $xml_content [] = '<folder>css</folder>';
         $xml_content [] = '<folder>html</folder>';
@@ -357,17 +357,17 @@ class JTemplateCreator
         $xml_content [] = '<position>position-20</position>';
         $xml_content [] = '<position>footer</position>';
         $xml_content [] = '<position>debug</position>';
-        $xml_content [] = '<positions>';
+        $xml_content [] = '</positions>';
 
-        $xml_content [] = '<languages folder="language"></languages>';
-        $xml_content [] = '<language tag="en-GB">languages/en-GB.' . $this->sname . '.ini</language>';
-        $xml_content [] = '<language tag="en-GB">languages/en-GB.' . $this->sname . '.sys.ini</language>';
+        $xml_content [] = '<languages folder="language">';
+        $xml_content [] = '<language tag="en-GB">languages/en-GB.tpl_' . $this->tname . '.ini</language>';
+        $xml_content [] = '<language tag="en-GB">languages/en-GB.tpl_' . $this->tname . '.sys.ini</language>';
         $xml_content [] = '</languages>';
 
         $xml_content [] = '<config>';
         $xml_content [] = '<fields name="params">';
         $xml_content [] = '<fieldset name="advanced">';
-        $xml_content [] = '<field name="logo" class="" type="media" default="" label="LOGO"  description="Site logo" />';
+        $xml_content [] = '<field name="logo" class="" type="media" default="" label="Logo"  description="Site logo" />';
         $xml_content [] = '<field name="site_title"  type="text" default=""   label="JGLOBAL_TITLE"   description="JFIELD_ALT_PAGE_TITLE_LABEL"  filter="string" />';
         $xml_content [] = '<field name="sitedescription"  type="text" default=""   label="JGLOBAL_DESCRIPTION"   description="JGLOBAL_SUBHEADING_DESC"  filter="string" />';
         $xml_content [] = '</fieldset>';
@@ -396,7 +396,7 @@ class JTemplateCreator
     {
         if (extension_loaded('zip')) {
             $zip = new ZipArchive();
-            $zip_name = $this->sname . ".zip";
+            $zip_name = $this->tname . ".zip";
             if ($zip->open($zip_name, ZIPARCHIVE::CREATE) !== TRUE) {
                 return false;
             }
@@ -425,9 +425,30 @@ class JTemplateCreator
         return '<html><body></body></html>';
     }
 
+    function generateFoldersAndFiles()
+    {
+        mkdir("css");
+        mkdir("html");
+        mkdir("images");
+        mkdir("js");
+        mkdir("languages");
+        $this->addToZip($this->createFile('css/template.css', ''));
+        $this->addToZip($this->createFile('js/template.js', ''));
+        $this->addToZip($this->createFile('languages/en-GB.tpl_' . $this->tname . '.ini', strtoupper($this->tname) . '="' . (ucwords($this->name)) . '"'));
+        $this->addToZip($this->createFile('languages/en-GB.tpl_' . $this->tname . '.sys.ini', strtoupper($this->tname) . '="' . (ucwords($this->name)) . '"'));
+        $this->addToZip($this->createFile('css/index.html', $this->getEmptyHtml()));
+        $this->addToZip($this->createFile('html/index.html', $this->getEmptyHtml()));
+        $this->addToZip($this->createFile('js/index.html', $this->getEmptyHtml()));
+        $this->addToZip($this->createFile('images/index.html', $this->getEmptyHtml()));
+    }
+
     function deleteTmpFolders()
     {
         if (file_exists("languages")) rmdir("languages");
+        if (file_exists("css")) rmdir("css");
+        if (file_exists("html")) rmdir("html");
+        if (file_exists("images")) rmdir("images");
+        if (file_exists("js")) rmdir("js");
     }
 
     function run()
@@ -438,7 +459,7 @@ class JTemplateCreator
             $this->addToZip($this->createFile('component.php', $this->generateComponentFile()));
             $this->addToZip($this->createFile('error.php', $this->generateErrorFile()));
             $this->addToZip($this->createFile('offline.php', $this->generateOfflineFile()));
-
+            $this->generateFoldersAndFiles();
             $this->createAndSaveZip();
             $this->deleteTmpFolders();
         } else {
@@ -464,7 +485,7 @@ class JTemplateCreator
             <title>J! Template Creator</title>
         </head>
         <body>
-        <form method="post" action="index.php" name="subform" class="form"/>
+        <form method="post" action="run.php" name="subform" class="form"/>
         <div class="jumbotron navbar-form">
 
             <div class="container">
@@ -472,7 +493,7 @@ class JTemplateCreator
                 <table width="50%" class="table table-striped table-hover">
                     <tr>
                         <td>System name of template:</td>
-                        <td><input class="form-control required" type="text" value="com_" name="tname" size="45"/></td>
+                        <td><input class="form-control required" type="text" value="tpl_" name="tname" size="45"/></td>
                     </tr>
                     <tr>
                         <td>Title(Name) of template:</td>
@@ -526,4 +547,5 @@ class JTemplateCreator
     <?php
     }
 }
+
 ?>
